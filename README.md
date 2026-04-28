@@ -8,6 +8,22 @@ Módulo PHP reutilizable de autenticación con sesiones. Pensado como barrera de
 - Gestión de usuarios por CLI vía SSH
 - Protección server-side mediante nginx `auth_request` (sin flash, sin JS visible en páginas protegidas)
 
+## Inicio rápido
+
+¿Quieres poner contraseña a tu web? Necesitas hacer cinco cosas:
+
+1. **Copia la carpeta `auth/` en tu proyecto** junto con `themes/` y `login.html` — son los archivos que hacen funcionar todo.
+
+2. **Crea tu configuración** — duplica `auth.config.example.json` como `auth.config.json` y rellena el nombre de tu proyecto y la ruta donde se guardarán los usuarios. Añade ese archivo a tu `.gitignore`, nunca debe subirse al repositorio.
+
+3. **Añade un paso de build** — tu script de build lee el config, mete el tema en la página de login y copia los PHP a `dist/auth/`. Ver sección [Generar login.html](#3-generar-loginhtml-durante-el-build).
+
+4. **Configura nginx** — copia el bloque de configuración de la sección [nginx](#configuración-nginx) y reemplaza `subdominio.tudominio.es` y `/var/www/nombre` por los tuyos. Verifica con `sudo nginx -t` y recarga.
+
+5. **Da de alta a tus usuarios** — en el servidor vía SSH, crea el archivo de usuarios y añade tu primer usuario con `php /ruta/auth/add-user.php tu-usuario`. El script te pedirá la contraseña. Para añadir más usuarios en el futuro, repite este comando.
+
+---
+
 ## Archivos del módulo
 
 ```
