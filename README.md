@@ -16,7 +16,7 @@ Want to password-protect your site? You need to do five things:
 
 2. **Create your config** — duplicate `auth.config.example.json` as `auth.config.json` and fill in your project name and the path where users will be stored. Add that file to your `.gitignore`; it must never be committed to the repository.
 
-3. **Add a build step** — your build script reads the config, injects the theme into the login page, and copies the PHP files to `dist/auth/`. See the [Generate login.html](#3-generate-loginhtml-during-the-build) section.
+3. **Generate the login page** — either add a build step (see [Generate login.html](#3-generate-loginhtml-during-the-build)), or skip it entirely: copy `login.example.html` to `dist/auth/login.html` and edit the project name and subtitle directly in the file.
 
 4. **Configure nginx** — copy the config block from the [nginx](#nginx-configuration) section and replace `subdomain.yourdomain.com` and `/var/www/name` with your own values. Verify with `sudo nginx -t` and reload.
 
@@ -35,7 +35,8 @@ auth/
 themes/
   warm.css        Warm serif theme (Lora + DM Sans)
   dark.css        Dark monospace theme (IBM Plex Mono)
-login.html        Login page template (placeholders {{variable}})
+login.html          Login page template (placeholders {{variable}})
+login.example.html  Ready-to-use login page (warm theme, example values already filled in)
 auth.config.example.json
 ```
 
@@ -46,9 +47,10 @@ auth.config.example.json
 ### 1. Copy the module into your project
 
 ```bash
-cp -r php_mini_auth/auth/    my-project/auth/
-cp -r php_mini_auth/themes/  my-project/auth/themes/
-cp    php_mini_auth/login.html my-project/auth/login.html
+cp -r php_mini_auth/auth/             my-project/auth/
+cp -r php_mini_auth/themes/           my-project/auth/themes/
+cp    php_mini_auth/login.html        my-project/auth/login.html
+cp    php_mini_auth/login.example.html my-project/auth/login.example.html
 cp    php_mini_auth/auth.config.example.json my-project/auth/auth.config.example.json
 ```
 
@@ -81,7 +83,9 @@ auth/auth.config.json
 
 ### 3. Generate login.html during the build
 
-`auth/login.html` uses placeholders `{{project_name}}`, `{{subtitle}}`, and `{{css}}`. The build replaces them with a simple `replaceAll` — no templating dependencies. Example for a project with a Node.js `build.js`:
+**No build step?** Copy `login.example.html` to `dist/auth/login.html` and manually replace `My Project` and `private access` with your project's name and subtitle. The warm theme CSS is already inlined — no further processing needed.
+
+If you do have a build step, `auth/login.html` uses placeholders `{{project_name}}`, `{{subtitle}}`, and `{{css}}` that can be replaced with a simple `replaceAll` — no templating dependencies. Example for a project with a Node.js `build.js`:
 
 ```js
 const cfg      = JSON.parse(fs.readFileSync('auth/auth.config.json', 'utf8'));
