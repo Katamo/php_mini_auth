@@ -1,0 +1,7 @@
+{
+  "project_name": "Mi Proyecto",
+  "subtitle": "acceso privado",
+  "session_key": "miproyecto_user",
+  "users_file": "/var/www/.miproyecto-users.json",
+  "theme": "warm"
+}

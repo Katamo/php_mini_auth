@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ project_name }}</title>
+<style>{{ css }}</style>
+</head>
+<body>
+<div class="login">
+  <div class="login__card">
+    <p class="login__title">{{ project_name }}</p>
+    <p class="login__subtitle">{{ subtitle }}</p>
+    <form id="form" class="login__form">
+      <div class="login__field">
+        <label class="login__label" for="u">usuario</label>
+        <input class="login__input" id="u" type="text" autocomplete="username" autofocus />
+      </div>
+      <div class="login__field">
+        <label class="login__label" for="p">contraseña</label>
+        <input class="login__input" id="p" type="password" autocomplete="current-password" />
+      </div>
+      <p class="login__error" id="err"></p>
+      <button class="login__submit" type="submit" id="btn">entrar</button>
+    </form>
+  </div>
+</div>
+<script>
+const form = document.getElementById('form');
+const err  = document.getElementById('err');
+const btn  = document.getElementById('btn');
+const redirect = new URLSearchParams(location.search).get('redirect') || '/';
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  err.textContent = '';
+  btn.disabled = true;
+  btn.textContent = '…';
+  const username = document.getElementById('u').value.trim();
+  const password = document.getElementById('p').value;
+  try {
+    const res  = await fetch('login.php', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      location.href = redirect;
+    } else {
+      err.textContent = data.error || 'Credenciales incorrectas';
+      btn.disabled = false;
+      btn.textContent = 'entrar';
+    }
+  } catch {
+    err.textContent = 'Error de conexión';
+    btn.disabled = false;
+    btn.textContent = 'entrar';
+  }
+});
+</script>
+</body>
+</html>
