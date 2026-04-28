@@ -19,7 +19,7 @@ auth/
 themes/
   warm.css        Tema cálido serif (Lora + DM Sans)
   dark.css        Tema oscuro monospace (IBM Plex Mono)
-login.njk         Template Nunjucks para la página de login
+login.html        Template de la página de login (placeholders {{variable}})
 auth.config.example.json
 ```
 
@@ -32,7 +32,7 @@ auth.config.example.json
 ```bash
 cp -r php_mini_auth/auth/    mi-proyecto/auth/
 cp -r php_mini_auth/themes/  mi-proyecto/auth/themes/
-cp    php_mini_auth/login.njk mi-proyecto/auth/login.njk
+cp    php_mini_auth/login.html mi-proyecto/auth/login.html
 cp    php_mini_auth/auth.config.example.json mi-proyecto/auth/auth.config.example.json
 ```
 
@@ -65,23 +65,19 @@ auth/auth.config.json
 
 ### 3. Generar login.html durante el build
 
-El template `auth/login.njk` necesita renderizarse con Node.js + Nunjucks durante el build. Ejemplo para un proyecto con `build.js`:
+`auth/login.html` usa placeholders `{{project_name}}`, `{{subtitle}}` y `{{css}}`. El build los sustituye con un simple `replaceAll` — sin dependencias de templating. Ejemplo para un proyecto con `build.js` en Node.js:
 
 ```js
-const nunjucks = require('nunjucks');
-const authEnv  = new nunjucks.Environment(
-  new nunjucks.FileSystemLoader(path.join(ROOT, 'auth')),
-  { autoescape: false }
-);
 const cfg      = JSON.parse(fs.readFileSync('auth/auth.config.json', 'utf8'));
 const css      = fs.readFileSync(`auth/themes/${cfg.theme}.css`, 'utf8');
-const html     = authEnv.render('login.njk', {
-  project_name: cfg.project_name,
-  subtitle:     cfg.subtitle,
-  css,
-});
-fs.writeFileSync('dist/auth/login.html', html);
-// copiar PHP a dist/auth/
+const loginHtml = fs.readFileSync('auth/login.html', 'utf8')
+  .replaceAll('{{project_name}}', cfg.project_name)
+  .replaceAll('{{subtitle}}',     cfg.subtitle)
+  .replaceAll('{{css}}',          css);
+
+fs.mkdirSync('dist/auth', { recursive: true });
+fs.writeFileSync('dist/auth/login.html', loginHtml);
+
 for (const f of ['login.php', 'check.php', 'logout.php', 'add-user.php']) {
   fs.copyFileSync(`auth/${f}`, `dist/auth/${f}`);
 }
