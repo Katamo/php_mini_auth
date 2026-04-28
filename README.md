@@ -243,10 +243,7 @@ Crea `auth/themes/mi-tema.css` siguiendo la estructura de `warm.css` o `dark.css
 
 ## Seguridad
 
-- Contraseñas hasheadas con **bcrypt** (`password_hash` / `password_verify`)
-- **300ms de delay** en credenciales inválidas para ralentizar fuerza bruta
-- **`session_regenerate_id(true)`** tras login exitoso (previene session fixation)
-- Archivo de usuarios **fuera del web root** (nginx no lo sirve nunca)
-- `auth.config.json` **bloqueado** en nginx y **gitignoreado**
-- `add-user.php` **bloqueado** en nginx (solo ejecutable por CLI vía SSH)
-- `check.php` marcado como **`internal`** en nginx (inaccesible desde el navegador)
+- Las contraseñas se almacenan de forma segura, nunca en texto plano
+- Se aplican medidas para dificultar accesos no autorizados
+- Los archivos sensibles no son accesibles desde el navegador
+- La configuración y el listado de usuarios nunca se exponen públicamente
