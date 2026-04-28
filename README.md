@@ -1,87 +1,87 @@
 # php_mini_auth
 
-Módulo PHP reutilizable de autenticación con sesiones. Pensado como barrera de acceso para proyectos web estáticos o simples servidos con nginx + PHP-FPM.
+Reusable PHP authentication module with sessions. Designed as an access barrier for static or simple web projects served with nginx + PHP-FPM.
 
-- Usuarios con contraseña bcrypt almacenados en JSON fuera del web root
-- Sesiones PHP con aislamiento por proyecto (`session_name`)
-- Página de login autogenerada con theming configurable (warm, dark, o custom)
-- Gestión de usuarios por CLI vía SSH
-- Protección server-side mediante nginx `auth_request` (sin flash, sin JS visible en páginas protegidas)
+- Users with bcrypt passwords stored in JSON outside the web root
+- PHP sessions with per-project isolation (`session_name`)
+- Auto-generated login page with configurable theming (warm, dark, or custom)
+- User management via CLI over SSH
+- Server-side protection using nginx `auth_request` (no flash, no visible JS on protected pages)
 
-## Inicio rápido
+## Quick start
 
-¿Quieres poner contraseña a tu web? Necesitas hacer cinco cosas:
+Want to password-protect your site? You need to do five things:
 
-1. **Copia la carpeta `auth/` en tu proyecto** junto con `themes/` y `login.html` — son los archivos que hacen funcionar todo.
+1. **Copy the `auth/` folder into your project** along with `themes/` and `login.html` — these are the files that make everything work.
 
-2. **Crea tu configuración** — duplica `auth.config.example.json` como `auth.config.json` y rellena el nombre de tu proyecto y la ruta donde se guardarán los usuarios. Añade ese archivo a tu `.gitignore`, nunca debe subirse al repositorio.
+2. **Create your config** — duplicate `auth.config.example.json` as `auth.config.json` and fill in your project name and the path where users will be stored. Add that file to your `.gitignore`; it must never be committed to the repository.
 
-3. **Añade un paso de build** — tu script de build lee el config, mete el tema en la página de login y copia los PHP a `dist/auth/`. Ver sección [Generar login.html](#3-generar-loginhtml-durante-el-build).
+3. **Add a build step** — your build script reads the config, injects the theme into the login page, and copies the PHP files to `dist/auth/`. See the [Generate login.html](#3-generate-loginhtml-during-the-build) section.
 
-4. **Configura nginx** — copia el bloque de configuración de la sección [nginx](#configuración-nginx) y reemplaza `subdominio.tudominio.es` y `/var/www/nombre` por los tuyos. Verifica con `sudo nginx -t` y recarga.
+4. **Configure nginx** — copy the config block from the [nginx](#nginx-configuration) section and replace `subdomain.yourdomain.com` and `/var/www/name` with your own values. Verify with `sudo nginx -t` and reload.
 
-5. **Da de alta a tus usuarios** — en el servidor vía SSH, crea el archivo de usuarios y añade tu primer usuario con `php /ruta/auth/add-user.php tu-usuario`. El script te pedirá la contraseña. Para añadir más usuarios en el futuro, repite este comando.
+5. **Create your users** — on the server via SSH, create the users file and add your first user with `php /path/auth/add-user.php your-username`. The script will prompt for a password. To add more users in the future, repeat this command.
 
 ---
 
-## Archivos del módulo
+## Module files
 
 ```
 auth/
-  login.php       POST: valida credenciales y crea sesión
-  check.php       GET:  devuelve 200/401 según sesión (usado por nginx auth_request)
-  logout.php      GET/POST: destruye la sesión
-  add-user.php    CLI: gestión de usuarios (add / list / remove)
+  login.php       POST: validates credentials and creates session
+  check.php       GET:  returns 200/401 based on session (used by nginx auth_request)
+  logout.php      GET/POST: destroys the session
+  add-user.php    CLI: user management (add / list / remove)
 themes/
-  warm.css        Tema cálido serif (Lora + DM Sans)
-  dark.css        Tema oscuro monospace (IBM Plex Mono)
-login.html        Template de la página de login (placeholders {{variable}})
+  warm.css        Warm serif theme (Lora + DM Sans)
+  dark.css        Dark monospace theme (IBM Plex Mono)
+login.html        Login page template (placeholders {{variable}})
 auth.config.example.json
 ```
 
 ---
 
-## Integración rápida
+## Quick integration
 
-### 1. Copiar el módulo al proyecto
-
-```bash
-cp -r php_mini_auth/auth/    mi-proyecto/auth/
-cp -r php_mini_auth/themes/  mi-proyecto/auth/themes/
-cp    php_mini_auth/login.html mi-proyecto/auth/login.html
-cp    php_mini_auth/auth.config.example.json mi-proyecto/auth/auth.config.example.json
-```
-
-### 2. Crear la configuración (gitignoreada)
+### 1. Copy the module into your project
 
 ```bash
-cp mi-proyecto/auth/auth.config.example.json mi-proyecto/auth/auth.config.json
+cp -r php_mini_auth/auth/    my-project/auth/
+cp -r php_mini_auth/themes/  my-project/auth/themes/
+cp    php_mini_auth/login.html my-project/auth/login.html
+cp    php_mini_auth/auth.config.example.json my-project/auth/auth.config.example.json
 ```
 
-Editar `auth.config.json`:
+### 2. Create the config (gitignored)
+
+```bash
+cp my-project/auth/auth.config.example.json my-project/auth/auth.config.json
+```
+
+Edit `auth.config.json`:
 
 ```json
 {
-  "project_name": "Nombre del proyecto",
-  "subtitle":     "acceso privado",
-  "session_key":  "nombre_unico_user",
-  "users_file":   "/var/www/.nombre-users.json",
+  "project_name": "Project name",
+  "subtitle":     "private access",
+  "session_key":  "unique_project_name",
+  "users_file":   "/var/www/.name-users.json",
   "theme":        "warm"
 }
 ```
 
-Añadir al `.gitignore` del proyecto:
+Add to the project's `.gitignore`:
 ```
 auth/auth.config.json
 ```
 
-> `session_key` actúa como nombre de la cookie de sesión. Usa un valor único por proyecto para que proyectos en el mismo servidor no interfieran entre sí.
+> `session_key` acts as the session cookie name. Use a unique value per project so that projects on the same server don't interfere with each other.
 
-> `users_file` debe apuntar **fuera del web root** del proyecto para que nginx no pueda servirlo.
+> `users_file` must point **outside the project's web root** so nginx cannot serve it.
 
-### 3. Generar login.html durante el build
+### 3. Generate login.html during the build
 
-`auth/login.html` usa placeholders `{{project_name}}`, `{{subtitle}}` y `{{css}}`. El build los sustituye con un simple `replaceAll` — sin dependencias de templating. Ejemplo para un proyecto con `build.js` en Node.js:
+`auth/login.html` uses placeholders `{{project_name}}`, `{{subtitle}}`, and `{{css}}`. The build replaces them with a simple `replaceAll` — no templating dependencies. Example for a project with a Node.js `build.js`:
 
 ```js
 const cfg      = JSON.parse(fs.readFileSync('auth/auth.config.json', 'utf8'));
@@ -99,67 +99,67 @@ for (const f of ['login.php', 'check.php', 'logout.php', 'add-user.php']) {
 }
 ```
 
-### 4. Configurar el servidor (una sola vez vía SSH)
+### 4. Configure the server (once via SSH)
 
-#### Crear el archivo de usuarios
+#### Create the users file
 ```bash
-sudo touch /var/www/.nombre-users.json
-echo '{}' | sudo tee /var/www/.nombre-users.json
-sudo chown oscar:oscar /var/www/.nombre-users.json
-sudo chmod 644 /var/www/.nombre-users.json
+sudo touch /var/www/.name-users.json
+echo '{}' | sudo tee /var/www/.name-users.json
+sudo chown oscar:oscar /var/www/.name-users.json
+sudo chmod 644 /var/www/.name-users.json
 ```
 
-#### Copiar auth.config.json al servidor
+#### Copy auth.config.json to the server
 ```bash
-scp -i ~/.ssh/gcp_key auth/auth.config.json usuario@ip:/var/www/nombre/auth/auth.config.json
+scp -i ~/.ssh/gcp_key auth/auth.config.json user@ip:/var/www/name/auth/auth.config.json
 ```
 
-#### Añadir el primer usuario
+#### Add the first user
 ```bash
-ssh -i ~/.ssh/gcp_key usuario@ip
-php /var/www/nombre/auth/add-user.php oscar
-```
-
----
-
-## Gestión de usuarios (CLI)
-
-```bash
-# Añadir o actualizar usuario
-php /var/www/nombre/auth/add-user.php <usuario>
-
-# Listar usuarios
-php /var/www/nombre/auth/add-user.php --list
-
-# Eliminar usuario
-php /var/www/nombre/auth/add-user.php --remove <usuario>
+ssh -i ~/.ssh/gcp_key user@ip
+php /var/www/name/auth/add-user.php oscar
 ```
 
 ---
 
-## Configuración nginx
+## User management (CLI)
 
-Ejemplo completo para un subdominio con área protegida. Ajusta `server_name`, `root`, y el socket de PHP-FPM (`php8.x-fpm.sock`) según tu servidor.
+```bash
+# Add or update a user
+php /var/www/name/auth/add-user.php <username>
 
-Para verificar la versión de PHP-FPM instalada: `php -v` en el servidor.
+# List users
+php /var/www/name/auth/add-user.php --list
+
+# Remove a user
+php /var/www/name/auth/add-user.php --remove <username>
+```
+
+---
+
+## nginx configuration
+
+Full example for a subdomain with a protected area. Adjust `server_name`, `root`, and the PHP-FPM socket (`php8.x-fpm.sock`) to match your server.
+
+To check the installed PHP-FPM version: run `php -v` on the server.
 
 ```nginx
 server {
     listen 443 ssl;
-    server_name subdominio.tudominio.es;
+    server_name subdomain.yourdomain.com;
 
-    root  /var/www/nombre;
+    root  /var/www/name;
     index index.html;
 
     # SSL — Let's Encrypt
-    ssl_certificate     /etc/letsencrypt/live/subdominio.tudominio.es/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/subdominio.tudominio.es/privkey.pem;
+    ssl_certificate     /etc/letsencrypt/live/subdomain.yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/subdomain.yourdomain.com/privkey.pem;
     include             /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam         /etc/letsencrypt/ssl-dhparams.pem;
 
-    # ── Endpoint interno para auth_request ──────────────────────────────
-    # 'internal' lo hace inaccesible directamente desde el navegador.
-    # nginx lo llama en cada petición protegida para comprobar la sesión.
+    # ── Internal endpoint for auth_request ──────────────────────────────
+    # 'internal' makes it inaccessible directly from the browser.
+    # nginx calls it on every protected request to verify the session.
     location = /auth/check.php {
         internal;
         fastcgi_pass unix:/run/php/php8.2-fpm.sock;
@@ -167,24 +167,24 @@ server {
         include fastcgi_params;
     }
 
-    # ── Endpoints públicos de auth ───────────────────────────────────────
-    # login.html: página estática autogenerada
+    # ── Public auth endpoints ────────────────────────────────────────────
+    # login.html: auto-generated static page
     location = /auth/login.html { }
 
-    # login.php y logout.php: endpoints PHP sin restricción de sesión
+    # login.php and logout.php: PHP endpoints with no session restriction
     location ~ ^/auth/(login|logout)\.php$ {
         fastcgi_pass unix:/run/php/php8.2-fpm.sock;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         include fastcgi_params;
     }
 
-    # ── Bloquear acceso HTTP a archivos sensibles ────────────────────────
+    # ── Block HTTP access to sensitive files ─────────────────────────────
     location = /auth/add-user.php  { deny all; }
     location ~ /auth/.*\.json$     { deny all; }
 
-    # ── Área protegida ───────────────────────────────────────────────────
-    # Toda petición pasa por check.php antes de ser servida.
-    # Si check.php devuelve 401, nginx redirige al login con la URL original.
+    # ── Protected area ───────────────────────────────────────────────────
+    # Every request goes through check.php before being served.
+    # If check.php returns 401, nginx redirects to login with the original URL.
     location / {
         auth_request /auth/check.php;
         error_page 401 = @login_redirect;
@@ -196,54 +196,54 @@ server {
     }
 }
 
-# Redirigir HTTP → HTTPS
+# Redirect HTTP → HTTPS
 server {
     listen 80;
-    server_name subdominio.tudominio.es;
+    server_name subdomain.yourdomain.com;
     return 301 https://$host$request_uri;
 }
 ```
 
-### Activar el virtual host
+### Enable the virtual host
 
 ```bash
-# Enlazar y verificar
-sudo ln -s /etc/nginx/sites-available/subdominio /etc/nginx/sites-enabled/
+# Link and verify
+sudo ln -s /etc/nginx/sites-available/subdomain /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-### Múltiples proyectos protegidos en el mismo servidor
+### Multiple protected projects on the same server
 
-Cada proyecto tiene su propio bloque `server {}` con:
-- `server_name` y `root` propios
-- `auth.config.json` propio (session_key y users_file distintos)
-- Usuarios en archivos JSON separados (ej: `.menus-users.json`, `.fotos-users.json`)
+Each project has its own `server {}` block with:
+- Its own `server_name` and `root`
+- Its own `auth.config.json` (distinct `session_key` and `users_file`)
+- Users in separate JSON files (e.g. `.menus-users.json`, `.photos-users.json`)
 
-Los proyectos no comparten sesión gracias a la combinación de dominios distintos (cookies aisladas por dominio) y `session_key` únicos.
+Projects don't share sessions thanks to the combination of distinct domains (cookies isolated by domain) and unique `session_key` values.
 
 ---
 
-## Temas
+## Themes
 
-| Tema   | Tipografía           | Fondo     | Indicado para         |
-|--------|----------------------|-----------|-----------------------|
-| `warm` | Lora + DM Sans       | Crema/blanco | Proyectos con estética editorial/cocina |
-| `dark` | IBM Plex Mono        | Negro     | Proyectos técnicos/portfolio |
+| Theme  | Typography           | Background      | Best for                        |
+|--------|----------------------|-----------------|---------------------------------|
+| `warm` | Lora + DM Sans       | Cream/white     | Editorial or food-style projects |
+| `dark` | IBM Plex Mono        | Black           | Technical or portfolio projects  |
 
-### Tema personalizado
+### Custom theme
 
-Crea `auth/themes/mi-tema.css` siguiendo la estructura de `warm.css` o `dark.css` (mismas clases BEM: `.login`, `.login__card`, `.login__title`, etc.) y referencia el nuevo tema en `auth.config.json`:
+Create `auth/themes/my-theme.css` following the structure of `warm.css` or `dark.css` (same BEM classes: `.login`, `.login__card`, `.login__title`, etc.) and reference the new theme in `auth.config.json`:
 
 ```json
-{ "theme": "mi-tema" }
+{ "theme": "my-theme" }
 ```
 
 ---
 
-## Seguridad
+## Security
 
-- Las contraseñas se almacenan de forma segura, nunca en texto plano
-- Se aplican medidas para dificultar accesos no autorizados
-- Los archivos sensibles no son accesibles desde el navegador
-- La configuración y el listado de usuarios nunca se exponen públicamente
+- Passwords are stored securely, never in plain text
+- Measures are applied to prevent unauthorized access
+- Sensitive files are not accessible from the browser
+- The config and user list are never exposed publicly
