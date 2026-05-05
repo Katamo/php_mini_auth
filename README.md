@@ -32,6 +32,7 @@ auth/
   check.php       GET:  returns 200/401 based on session (used by nginx auth_request)
   logout.php      GET/POST: destroys the session
   add-user.php    CLI: user management (add / list / remove)
+  toggle.php      CLI: enable or disable auth without touching nginx
 themes/
   warm.css        Warm serif theme (Lora + DM Sans)
   dark.css        Dark monospace theme (IBM Plex Mono)
@@ -126,6 +127,25 @@ php /var/www/name/auth/add-user.php oscar
 
 ---
 
+## Enable / disable auth (CLI)
+
+Toggle authentication on or off without touching nginx. The state is stored in `auth.config.json` under the `enabled` key. When disabled, `check.php` returns 200 for every request — the site is fully public.
+
+```bash
+# Flip current state (on → off, off → on)
+php /var/www/name/auth/toggle.php
+
+# Force a specific state
+php /var/www/name/auth/toggle.php --on
+php /var/www/name/auth/toggle.php --off
+```
+
+The script is CLI-only and returns 403 if called from a browser.
+
+> `enabled` defaults to `true` if the key is absent, so existing configs without it continue to work normally.
+
+---
+
 ## User management (CLI)
 
 ```bash
@@ -184,6 +204,7 @@ server {
 
     # ── Block HTTP access to sensitive files ─────────────────────────────
     location = /auth/add-user.php  { deny all; }
+    location = /auth/toggle.php    { deny all; }
     location ~ /auth/.*\.json$     { deny all; }
 
     # ── Protected area ───────────────────────────────────────────────────

@@ -19,6 +19,13 @@ if (!file_exists($cfgFile) || !is_array($cfg = json_decode(file_get_contents($cf
     exit;
 }
 
+// Auth deshabilitada globalmente → dejar pasar sin sesión
+if (isset($cfg['enabled']) && $cfg['enabled'] === false) {
+    http_response_code(200);
+    echo json_encode(['ok' => true, 'user' => null, 'auth_disabled' => true]);
+    exit;
+}
+
 session_save_path('/tmp');
 session_name($cfg['session_key']);
 session_start();
