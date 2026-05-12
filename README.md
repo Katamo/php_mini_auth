@@ -86,7 +86,7 @@ auth/auth.config.json
 
 **No build step?** Copy `login.example.html` to `dist/auth/login.html` and manually replace `My Project` and `private access` with your project's name and subtitle. The warm theme CSS is already inlined — no further processing needed.
 
-If you do have a build step, `auth/login.html` uses placeholders `{{project_name}}`, `{{subtitle}}`, and `{{css}}` that can be replaced with a simple `replaceAll` — no templating dependencies. Example for a project with a Node.js `build.js`:
+If you do have a build step, `auth/login.html` uses placeholders `{{project_name}}`, `{{subtitle}}`, `{{session_key}}`, and `{{css}}` that can be replaced with a simple `replaceAll` — no templating dependencies. Example for a project with a Node.js `build.js`:
 
 ```js
 const cfg      = JSON.parse(fs.readFileSync('auth/auth.config.json', 'utf8'));
@@ -94,6 +94,7 @@ const css      = fs.readFileSync(`auth/themes/${cfg.theme}.css`, 'utf8');
 const loginHtml = fs.readFileSync('auth/login.html', 'utf8')
   .replaceAll('{{project_name}}', cfg.project_name)
   .replaceAll('{{subtitle}}',     cfg.subtitle)
+  .replaceAll('{{session_key}}',  cfg.session_key)
   .replaceAll('{{css}}',          css);
 
 fs.mkdirSync('dist/auth', { recursive: true });

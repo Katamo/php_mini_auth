@@ -55,10 +55,26 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ---
 
-## 4. Deploy the updated check.php
+## 4. Update the build script
 
-The build must copy the new `check.php` to `dist/auth/check.php`. If the project
-has a build script, run it and deploy as usual. If files are deployed manually:
+Add `{{session_key}}` to the `replaceAll` chain in your build script:
+
+```js
+const loginHtml = fs.readFileSync('auth/login.html', 'utf8')
+  .replaceAll('{{project_name}}', cfg.project_name)
+  .replaceAll('{{subtitle}}',     cfg.subtitle)
+  .replaceAll('{{session_key}}',  cfg.session_key)   // ← add this line
+  .replaceAll('{{css}}',          css);
+```
+
+Without this, the input `name` attributes will be rendered literally as `{{session_key}}_u` / `{{session_key}}_p` and browser autofill will not work correctly.
+
+---
+
+## 5. Deploy the updated files
+
+The build must copy the new `check.php` to `dist/auth/check.php`. Run the build
+and deploy as usual. If deploying manually:
 
 ```bash
 scp -i ~/.ssh/gcp_key auth/check.php user@ip:/var/www/name/auth/check.php
@@ -67,13 +83,13 @@ scp -i ~/.ssh/gcp_key auth/toggle.php user@ip:/var/www/name/auth/toggle.php
 
 ---
 
-## 5. Clear saved browser passwords (one-time)
+## 6. Clear saved browser passwords (one-time)
 
 The `name` attributes of the login fields have changed (`u` → `{{session_key}}_u`, `p` → `{{session_key}}_p`). Browsers key saved passwords partly on field names, so existing saved credentials may not auto-fill after the update. Users will need to save their password once after logging in again. This is a one-time event and the benefit is that browsers will no longer suggest passwords from a different project.
 
 ---
 
-## 6. Verify
+## 7. Verify
 
 Check that auth still works end-to-end, then test the toggle:
 
