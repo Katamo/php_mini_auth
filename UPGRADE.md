@@ -67,7 +67,13 @@ scp -i ~/.ssh/gcp_key auth/toggle.php user@ip:/var/www/name/auth/toggle.php
 
 ---
 
-## 5. Verify
+## 5. Clear saved browser passwords (one-time)
+
+The `name` attributes of the login fields have changed (`u` → `{{session_key}}_u`, `p` → `{{session_key}}_p`). Browsers key saved passwords partly on field names, so existing saved credentials may not auto-fill after the update. Users will need to save their password once after logging in again. This is a one-time event and the benefit is that browsers will no longer suggest passwords from a different project.
+
+---
+
+## 6. Verify
 
 Check that auth still works end-to-end, then test the toggle:
 
@@ -88,5 +94,6 @@ php /var/www/name/auth/toggle.php --on
 | `auth/toggle.php` | New CLI script to enable/disable auth without touching nginx |
 | `auth/check.php` | Respects the new `enabled` flag in config; returns 200 for all requests when disabled |
 | `auth.config.json` | New `"enabled": true` key (backwards-compatible — defaults to true if absent) |
+| `login.html` | Password show/hide toggle button; unique `name` attributes per project (`{{session_key}}_u` / `{{session_key}}_p`) to prevent browser autofill cross-project confusion |
 | `login.example.html` | Ready-to-use login page with warm theme already inlined; no build step needed |
 | nginx config | `toggle.php` must be blocked alongside `add-user.php` |

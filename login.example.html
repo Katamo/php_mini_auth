@@ -124,7 +124,16 @@ html, body {
 .login__submit:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}</style>
+}
+
+.login__input-wrap { position: relative; }
+.login__input-wrap .login__input { padding-right: 2.4rem; }
+.login__toggle-pass {
+  position: absolute; right: 0.55rem; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; padding: 0.25rem;
+  color: var(--color-muted); display: flex; align-items: center; line-height: 0;
+}
+.login__toggle-pass:hover { color: var(--color-fg); }</style>
 </head>
 <body>
 <div class="login">
@@ -134,11 +143,16 @@ html, body {
     <form id="form" class="login__form">
       <div class="login__field">
         <label class="login__label" for="u">username</label>
-        <input class="login__input" id="u" type="text" autocomplete="username" autofocus />
+        <input class="login__input" id="u" name="myproject_u" type="text" autocomplete="username" autofocus />
       </div>
       <div class="login__field">
         <label class="login__label" for="p">password</label>
-        <input class="login__input" id="p" type="password" autocomplete="current-password" />
+        <div class="login__input-wrap">
+          <input class="login__input" id="p" name="myproject_p" type="password" autocomplete="current-password" />
+          <button class="login__toggle-pass" type="button" id="toggle-pass" aria-label="Show password">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
       </div>
       <p class="login__error" id="err"></p>
       <button class="login__submit" type="submit" id="btn">sign in</button>
@@ -178,6 +192,17 @@ form.addEventListener('submit', async e => {
     btn.disabled = false;
     btn.textContent = 'sign in';
   }
+});
+
+const SVG_EYE     = '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+const SVG_EYE_OFF = '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
+document.getElementById('toggle-pass').addEventListener('click', function () {
+  const input   = document.getElementById('p');
+  const visible = input.type === 'text';
+  input.type     = visible ? 'password' : 'text';
+  this.innerHTML = visible ? SVG_EYE : SVG_EYE_OFF;
+  this.setAttribute('aria-label', visible ? 'Show password' : 'Hide password');
 });
 </script>
 </body>
